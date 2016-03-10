@@ -1,0 +1,41 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:weightSum="1">
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="86dp"
+        android:text="Connect"
+        android:onClick="conn"
+        android:id="@+id/co"
+        android:layout_weight="0.25" />
+
+    <ToggleButton
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="blue"
+        android:textColor="@android:color/holo_blue_dark"
+        android:id="@+id/blue"
+        android:layout_weight="0.25" />
+
+    <ToggleButton
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="blue"
+        android:textColor="@android:color/holo_red_light"
+        android:id="@+id/red"
+        android:layout_weight="0.25" />
+
+    <ToggleButton
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="green"
+        android:textColor="@android:color/holo_green_light"
+        android:id="@+id/green"
+        android:layout_weight="0.25" />
+
+</LinearLayout>
