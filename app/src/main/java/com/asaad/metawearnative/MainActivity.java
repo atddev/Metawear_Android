@@ -46,15 +46,14 @@ public class MainActivity extends Activity implements ServiceConnection {
             Log.i("MainActivity", "Connected");
      //       Toast toast = Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT);
       //      toast.show();
-            Button co = (Button) findViewById(R.id.co);
-            co.setClickable(false);
+
         }
 
         @Override
         public void disconnected() {
        //     Toast toast = Toast.makeText(getApplicationContext(), "Connection Lost", Toast.LENGTH_SHORT);
         //    toast.show();
-            Log.i("MainActivity", "Connected Lost");
+            Log.i("MainActivity", "Connection Lost");
         }
 
         @Override
@@ -68,8 +67,12 @@ public class MainActivity extends Activity implements ServiceConnection {
     public void connectBoard() {
         mwBoard.setConnectionStateHandler(stateHandler);
         mwBoard.connect();
-    }
 
+    }
+    public void disconnectBoard() {
+        mwBoard.disconnect();
+
+    }
     boolean blue, red,green;
 
 
@@ -84,6 +87,21 @@ public class MainActivity extends Activity implements ServiceConnection {
         getApplicationContext().bindService(new Intent(this, MetaWearBleService.class),
                 this, Context.BIND_AUTO_CREATE);
 
+
+        //connect/disconnect button
+        ToggleButton toggleCon = (ToggleButton) findViewById(R.id.conn);
+        toggleCon.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    retrieveBoard();
+                    connectBoard();
+
+                } else {
+                    connectBoard();
+
+                }
+            }
+        });
 
         //Blue LED button
         ToggleButton toggleB = (ToggleButton) findViewById(R.id.blue);
@@ -207,13 +225,6 @@ public class MainActivity extends Activity implements ServiceConnection {
             }
         });
 
-    }
-    public void conn(View view) {
-        // Do something in response to button
-        Log.e("MainActivity", " retrieveBoard();");
-        retrieveBoard();
-        Log.e("MainActivity", " connectBoard();");
-        connectBoard();
     }
 
     @Override

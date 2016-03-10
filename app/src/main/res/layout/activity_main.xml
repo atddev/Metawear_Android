@@ -3,39 +3,55 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    android:weightSum="1">
+    app:layout_behavior="@string/appbar_scrolling_view_behavior" >
 
-    <Button
+    <RelativeLayout
         android:layout_width="0dp"
-        android:layout_height="86dp"
-        android:text="Connect"
-        android:onClick="conn"
-        android:id="@+id/co"
-        android:layout_weight="0.25" />
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="0.25">
 
-    <ToggleButton
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="blue"
-        android:textColor="@android:color/holo_blue_dark"
-        android:id="@+id/blue"
-        android:layout_weight="0.25" />
+        <ToggleButton
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="red"
+            android:textColor="@android:color/holo_red_light"
+            android:id="@+id/red"
+            android:layout_below="@+id/blue"
+            android:layout_alignStart="@+id/blue" />
 
-    <ToggleButton
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="blue"
-        android:textColor="@android:color/holo_red_light"
-        android:id="@+id/red"
-        android:layout_weight="0.25" />
+        <ToggleButton
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="green"
+            android:textColor="@android:color/holo_green_light"
+            android:id="@+id/green"
+            android:layout_below="@+id/red"
+            android:layout_alignStart="@+id/red" />
 
-    <ToggleButton
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="green"
-        android:textColor="@android:color/holo_green_light"
-        android:id="@+id/green"
-        android:layout_weight="0.25" />
+        <ToggleButton
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="blue"
+            android:textColor="@android:color/holo_blue_dark"
+            android:id="@+id/blue"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect"
+            android:id="@+id/conn"
+            android:checked="false"
+            android:textOn="disconnect"
+            android:textOff="Connect"
+            android:background="#636363"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="65dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
 
 </LinearLayout>
