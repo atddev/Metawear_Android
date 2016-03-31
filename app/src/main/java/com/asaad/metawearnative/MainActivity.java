@@ -15,11 +15,20 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
+import com.mbientlab.metawear.AsyncOperation;
+import com.mbientlab.metawear.DataSignal;
+import com.mbientlab.metawear.Message;
 import com.mbientlab.metawear.MetaWearBleService;
 import com.mbientlab.metawear.MetaWearBoard;
+import com.mbientlab.metawear.RouteManager;
 import com.mbientlab.metawear.UnsupportedModuleException;
+import com.mbientlab.metawear.data.CartesianFloat;
+import com.mbientlab.metawear.module.Bmi160Gyro;
+import com.mbientlab.metawear.module.DataProcessor;
 import com.mbientlab.metawear.module.Led;
+import com.mbientlab.metawear.processor.Comparison;
 
+import java.util.Map;
 
 
 public class MainActivity extends Activity implements ServiceConnection {
@@ -28,6 +37,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
     private final String MW_MAC_ADDRESS= "F5:FD:FD:34:57:CF";
     private MetaWearBoard mwBoard;
+    Bmi160Gyro bmi160GyroModule;
 
     public void retrieveBoard() {
         final BluetoothManager btManager =
@@ -73,7 +83,6 @@ public class MainActivity extends Activity implements ServiceConnection {
         mwBoard.disconnect();
 
     }
-    boolean blue, red,green;
 
 
     @Override
@@ -103,125 +112,62 @@ public class MainActivity extends Activity implements ServiceConnection {
             }
         });
 
-        //Blue LED button
-        ToggleButton toggleB = (ToggleButton) findViewById(R.id.blue);
-        toggleB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    // The toggle is enabled
-                    try {
-                        // Do not need to type cast result to Led class
-                        Led ledCtrllr = mwBoard.getModule(Led.class);
-                        ledCtrllr.configureColorChannel(Led.ColorChannel.BLUE)
-                                .setRiseTime((short) 0).setPulseDuration((short) 1000)
-                                .setRepeatCount((byte) -1).setHighTime((short) 500)
-                                .setHighIntensity((byte) 16).setLowIntensity((byte) 16)
-                                .commit();
-                        ledCtrllr.play(false);
 
-                    } catch (UnsupportedModuleException e) {
-                        Log.e("MainActivity", "No Led on the board", e);
-                    }
 
-                } else {
-                    // The toggle is disabled
-                    try {
-                        // Do not need to type cast result to Led class
-                        Led ledCtrllr = mwBoard.getModule(Led.class);
-                        ledCtrllr.configureColorChannel(Led.ColorChannel.BLUE)
-                                .setRiseTime((short) 0).setPulseDuration((short) 0)
-                                .setRepeatCount((byte) -1).setHighTime((short) 0)
-                                .setHighIntensity((byte) 0).setLowIntensity((byte) 0)
-                                .commit();
-                        ledCtrllr.play(false);
+        Button btng = (Button) findViewById(R.id.button);
+        btng.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-                    } catch (UnsupportedModuleException e) {
-                        Log.e("MainActivity", "No Led on the board", e);
-                    }
+                Log.i("MainActivity", "start sampling sensor");
 
+
+                try {
+                    bmi160GyroModule = mwBoard.getModule(Bmi160Gyro.class);
+                } catch (UnsupportedModuleException e) {
+                    e.printStackTrace();
                 }
-            }
-        });
+// Set the measurement range to +/-2000 degrees/s
+// Set output data rate to 100Hz
+                bmi160GyroModule.configure()
+                        .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_125)
+                        .setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_50_HZ)
+                        .commit();
 
-        //Red LED button
-        ToggleButton toggleR = (ToggleButton) findViewById(R.id.red);
-        toggleR.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    // The toggle is enabled
-                    try {
-                        // Do not need to type cast result to Led class
-                        Led ledCtrllr = mwBoard.getModule(Led.class);
-                        ledCtrllr.configureColorChannel(Led.ColorChannel.RED)
-                                .setRiseTime((short) 0).setPulseDuration((short) 1000)
-                                .setRepeatCount((byte) -1).setHighTime((short) 500)
-                                .setHighIntensity((byte) 16).setLowIntensity((byte) 16)
-                                .commit();
-                        ledCtrllr.play(false);
+                bmi160GyroModule.routeData().fromZAxis().process("comp_filter", new Comparison(Comparison.Operation.GT, 30)).
+                        monitor(new DataSignal.ActivityHandler() {
+                            @Override
+                            public void onSignalActive(Map<String, DataProcessor> processors,
+                                                       DataSignal.DataToken token) {
 
-                    } catch (UnsupportedModuleException e) {
-                        Log.e("MainActivity", "No Led on the board", e);
-                    }
-
-                } else {
-                    // The toggle is disabled
-                    try {
-                        // Do not need to type cast result to Led class
-                        Led ledCtrllr = mwBoard.getModule(Led.class);
-                        ledCtrllr.configureColorChannel(Led.ColorChannel.RED)
-                                .setRiseTime((short) 0).setPulseDuration((short) 0)
-                                .setRepeatCount((byte) -1).setHighTime((short) 0)
-                                .setHighIntensity((byte) 0).setLowIntensity((byte) 0)
-                                .commit();
-                        ledCtrllr.play(false);
-
-                    } catch (UnsupportedModuleException e) {
-                        Log.e("MainActivity", "No Led on the board", e);
-                    }
-
-                }
-            }
-        });
-
-        //Blue LED button
-        ToggleButton toggleG = (ToggleButton) findViewById(R.id.green);
-        toggleG.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    // The toggle is enabled
-                    try {
-                        // Do not need to type cast result to Led class
-                        Led ledCtrllr = mwBoard.getModule(Led.class);
-                        ledCtrllr.configureColorChannel(Led.ColorChannel.GREEN)
-                                .setRiseTime((short) 0).setPulseDuration((short) 1000)
-                                .setRepeatCount((byte) -1).setHighTime((short) 500)
-                                .setHighIntensity((byte) 16).setLowIntensity((byte) 16)
-                                .commit();
-                        ledCtrllr.play(false);
-
-                    } catch (UnsupportedModuleException e) {
-                        Log.e("MainActivity", "No Led on the board", e);
-                    }
-
-                } else {
-                    // The toggle is disabled
-                    try {
-                        // Do not need to type cast result to Led class
-                        Led ledCtrllr = mwBoard.getModule(Led.class);
-                        ledCtrllr.configureColorChannel(Led.ColorChannel.GREEN)
-                                .setRiseTime((short) 0).setPulseDuration((short) 0)
-                                .setRepeatCount((byte) -1).setHighTime((short) 0)
-                                .setHighIntensity((byte) 0).setLowIntensity((byte) 0)
-                                .commit();
-
-                        ledCtrllr.play(false);
+                                // If a value greater than the reference value is received,
+                                // update the comparison to use the new, higher value
+                                processors.get("comp_filter").modifyConfiguration(new Comparison(
+                                        Comparison.Operation.GTE, token));
+                                Log.i("MainActivity", "Token is: " + token.toString());
 
 
-                    } catch (UnsupportedModuleException e) {
-                        Log.e("MainActivity", "No Led on the board", e);
-                    }
+                            }
+                        }).commit();
 
-                }
+
+            //Stream rotation data around the Z axe from the gyro sensor
+                bmi160GyroModule.routeData().fromAxes().stream("gyro_stream").commit()
+                        .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
+                            @Override
+                            public void success(RouteManager result) {
+                                result.subscribe("gyro_stream", new RouteManager.MessageHandler() {
+                                    @Override
+                                    public void process(Message msg) {
+                                        final CartesianFloat spinData = msg.getData(CartesianFloat.class);
+
+                                        Log.i("MainActivity", spinData.toString());
+                                    }
+                                });
+
+                                bmi160GyroModule.start();
+                            }
+                        });
             }
         });
 

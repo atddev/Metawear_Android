@@ -11,32 +11,15 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="0.25">
 
-        <ToggleButton
+        <Button
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:text="red"
-            android:textColor="@android:color/holo_red_light"
-            android:id="@+id/red"
-            android:layout_below="@+id/blue"
-            android:layout_alignStart="@+id/blue" />
-
-        <ToggleButton
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="green"
-            android:textColor="@android:color/holo_green_light"
-            android:id="@+id/green"
-            android:layout_below="@+id/red"
-            android:layout_alignStart="@+id/red" />
-
-        <ToggleButton
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="blue"
-            android:textColor="@android:color/holo_blue_dark"
-            android:id="@+id/blue"
-            android:layout_centerVertical="true"
+            android:text="Read Sensor"
+            android:id="@+id/button"
+            android:layout_below="@+id/conn"
             android:layout_centerHorizontal="true" />
+
+
 
         <ToggleButton
             android:layout_width="wrap_content"
