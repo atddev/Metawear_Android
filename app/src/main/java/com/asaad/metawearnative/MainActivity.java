@@ -23,9 +23,11 @@ import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.RouteManager;
 import com.mbientlab.metawear.UnsupportedModuleException;
 import com.mbientlab.metawear.data.CartesianFloat;
+import com.mbientlab.metawear.module.Bmi160Accelerometer;
 import com.mbientlab.metawear.module.Bmi160Gyro;
 import com.mbientlab.metawear.module.DataProcessor;
 import com.mbientlab.metawear.module.Led;
+import com.mbientlab.metawear.module.Logging;
 import com.mbientlab.metawear.processor.Comparison;
 
 import java.util.Map;
@@ -38,6 +40,9 @@ public class MainActivity extends Activity implements ServiceConnection {
     private final String MW_MAC_ADDRESS= "F5:FD:FD:34:57:CF";
     private MetaWearBoard mwBoard;
     Bmi160Gyro bmi160GyroModule;
+    Bmi160Gyro gyroModule;
+    Logging loggingModule;
+
 
     public void retrieveBoard() {
         final BluetoothManager btManager =
@@ -106,7 +111,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                     connectBoard();
 
                 } else {
-                    connectBoard();
+                    disconnectBoard();
 
                 }
             }
@@ -121,53 +126,36 @@ public class MainActivity extends Activity implements ServiceConnection {
 
                 Log.i("MainActivity", "start sampling sensor");
 
-
                 try {
-                    bmi160GyroModule = mwBoard.getModule(Bmi160Gyro.class);
+                    gyroModule = mwBoard.getModule(Bmi160Gyro.class);
+                    loggingModule= mwBoard.getModule(Logging.class);
                 } catch (UnsupportedModuleException e) {
                     e.printStackTrace();
                 }
-// Set the measurement range to +/-2000 degrees/s
-// Set output data rate to 100Hz
-                bmi160GyroModule.configure()
-                        .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_125)
-                        .setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_50_HZ)
-                        .commit();
-
-                bmi160GyroModule.routeData().fromZAxis().process("comp_filter", new Comparison(Comparison.Operation.GT, 30)).
-                        monitor(new DataSignal.ActivityHandler() {
-                            @Override
-                            public void onSignalActive(Map<String, DataProcessor> processors,
-                                                       DataSignal.DataToken token) {
-
-                                // If a value greater than the reference value is received,
-                                // update the comparison to use the new, higher value
-                                processors.get("comp_filter").modifyConfiguration(new Comparison(
-                                        Comparison.Operation.GTE, token));
-                                Log.i("MainActivity", "Token is: " + token.toString());
 
 
-                            }
-                        }).commit();
-
-
-            //Stream rotation data around the Z axe from the gyro sensor
-                bmi160GyroModule.routeData().fromAxes().stream("gyro_stream").commit()
+                gyroModule.routeData().fromYAxis().log("gyroAxisLogger").commit()
                         .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
                             @Override
                             public void success(RouteManager result) {
-                                result.subscribe("gyro_stream", new RouteManager.MessageHandler() {
+                                result.setLogMessageHandler("gyroAxisLogger", new RouteManager.MessageHandler() {
                                     @Override
                                     public void process(Message msg) {
-                                        final CartesianFloat spinData = msg.getData(CartesianFloat.class);
+                                        final float ySpinData = msg.getData(Float.class);
 
-                                        Log.i("MainActivity", spinData.toString());
+                                        Log.i("test", String.format("Log Gyro: %.3f", ySpinData));
                                     }
                                 });
 
-                                bmi160GyroModule.start();
+                                loggingModule.startLogging();
+                                gyroModule.configure().setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_25_HZ)
+                                        .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_250)
+                                        .commit();
+                                gyroModule.start();
                             }
                         });
+
+
             }
         });
 
