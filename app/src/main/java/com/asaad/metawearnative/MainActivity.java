@@ -1,6 +1,7 @@
 package com.asaad.metawearnative;
 
 import android.app.Activity;
+import android.app.usage.UsageEvents;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.ComponentName;
@@ -23,12 +24,19 @@ import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.RouteManager;
 import com.mbientlab.metawear.UnsupportedModuleException;
 import com.mbientlab.metawear.data.CartesianFloat;
+import com.mbientlab.metawear.module.Accelerometer;
 import com.mbientlab.metawear.module.Bmi160Accelerometer;
 import com.mbientlab.metawear.module.Bmi160Gyro;
 import com.mbientlab.metawear.module.DataProcessor;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.Logging;
+import com.mbientlab.metawear.module.Macro;
+import com.mbientlab.metawear.processor.Average;
 import com.mbientlab.metawear.processor.Comparison;
+import com.mbientlab.metawear.module.Bmi160Accelerometer.*;
+import com.mbientlab.metawear.processor.Rss;
+import com.mbientlab.metawear.processor.Threshold;
+
 
 import java.util.Map;
 
@@ -42,7 +50,8 @@ public class MainActivity extends Activity implements ServiceConnection {
     Bmi160Gyro bmi160GyroModule;
     Bmi160Gyro gyroModule;
     Logging loggingModule;
-
+    Bmi160Accelerometer bmi160AccModule= null;
+    boolean opening, closing;
 
     public void retrieveBoard() {
         final BluetoothManager btManager =
@@ -117,7 +126,9 @@ public class MainActivity extends Activity implements ServiceConnection {
             }
         });
 
-
+        // set opening and closing to false
+        opening = false;
+         closing = false;
 
         Button btng = (Button) findViewById(R.id.button);
         btng.setOnClickListener(new View.OnClickListener() {
@@ -128,32 +139,48 @@ public class MainActivity extends Activity implements ServiceConnection {
 
                 try {
                     gyroModule = mwBoard.getModule(Bmi160Gyro.class);
-                    loggingModule= mwBoard.getModule(Logging.class);
                 } catch (UnsupportedModuleException e) {
                     e.printStackTrace();
                 }
 
 
-                gyroModule.routeData().fromYAxis().log("gyroAxisLogger").commit()
-                        .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
+
+                gyroModule.routeData().fromAxes().stream("gyroAxisSub")
+                        .commit().onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
+                    @Override
+                    public void success(RouteManager result) {
+                        result.subscribe("gyroAxisSub", new RouteManager.MessageHandler() {
                             @Override
-                            public void success(RouteManager result) {
-                                result.setLogMessageHandler("gyroAxisLogger", new RouteManager.MessageHandler() {
-                                    @Override
-                                    public void process(Message msg) {
-                                        final float ySpinData = msg.getData(Float.class);
+                            public void process(Message msg) {
+                                final CartesianFloat spinData = msg.getData(CartesianFloat.class);
+                                //     Log.i("test", spinData.toString());
 
-                                        Log.i("test", String.format("Log Gyro: %.3f", ySpinData));
+
+                                if (spinData.x() < -2) {
+                                    if(!opening) {
+                                        Log.i("test", spinData.toString());
+                                        Log.i("test", "Door Opening");
+                                        opening = true;
+                                        closing = false;
                                     }
-                                });
-
-                                loggingModule.startLogging();
-                                gyroModule.configure().setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_25_HZ)
+                                }
+                                if (spinData.x() > 2) {
+                                    if(!closing) {
+                                        Log.i("test", spinData.toString());
+                                        Log.i("test", "Door closing");
+                                        opening = false;
+                                        closing = true;
+                                    }
+                                }
+                            }
+                        });
+                            gyroModule.configure().setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_25_HZ)
                                         .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_250)
                                         .commit();
                                 gyroModule.start();
                             }
                         });
+
 
 
             }
