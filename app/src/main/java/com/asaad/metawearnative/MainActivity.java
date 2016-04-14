@@ -1,19 +1,26 @@
 package com.asaad.metawearnative;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.app.usage.UsageEvents;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.mbientlab.metawear.AsyncOperation;
@@ -37,6 +44,8 @@ import com.mbientlab.metawear.module.Bmi160Accelerometer.*;
 import com.mbientlab.metawear.processor.Rss;
 import com.mbientlab.metawear.processor.Threshold;
 
+import static com.mbientlab.metawear.MetaWearBoard.ConnectionStateHandler;
+
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -48,8 +57,8 @@ import java.util.Map;
 
 public class MainActivity extends Activity implements ServiceConnection {
 
-
-    private MetaWearBleService.LocalBinder serviceBinder;
+  //  private MetaWearBoard.ConnectionStateHandler stateHandler;
+   // private MetaWearBleService.LocalBinder serviceBinder;
 
 
     private final String MW_MAC_ADDRESS = "F5:FD:FD:34:57:CF";
@@ -66,51 +75,107 @@ public class MainActivity extends Activity implements ServiceConnection {
     public static final int SERVERPORT = 3444;
     public String message;
 
+    private ProgressDialog progress;
+    ToggleButton toggleCon;
+     Button btng;
 
 
-    public void retrieveBoard() {
-        final BluetoothManager btManager =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
-        final BluetoothDevice remoteDevice =
-                btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
 
-        // Create a MetaWear board object for the Bluetooth Device
-        mwBoard = serviceBinder.getMetaWearBoard(remoteDevice);
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        MetaWearBleService.LocalBinder binder = (MetaWearBleService.LocalBinder) service;
+
+        final BluetoothManager btManager= (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothDevice remoteDevice= btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
+
+        binder.executeOnUiThread();
+        //binder.clearCachedState(remoteDevice);
+        mwBoard= binder.getMetaWearBoard(remoteDevice);
+        mwBoard.setConnectionStateHandler(new MetaWearBoard.ConnectionStateHandler() {
+            @Override
+            public void connected() {
+                Toast.makeText(MainActivity.this, "Connection Successful", Toast.LENGTH_LONG).show();
+
+
+                toggleCon.setBackgroundColor(Color.parseColor("#009688"));
+                //  Dismiss the progress dialog
+                progress.dismiss();
+
+                btng.setEnabled(true);
+
+
+            }
+
+            @Override
+            public void disconnected() {
+                //  Dismiss the progress dialog
+                progress.dismiss();
+                Toast.makeText(MainActivity.this, "Successfully Disconnected", Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void failure(int status, final Throwable error) {
+                // Print error message
+                Toast.makeText(MainActivity.this, error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
-    private final MetaWearBoard.ConnectionStateHandler stateHandler = new MetaWearBoard.ConnectionStateHandler() {
-        @Override
-        public void connected() {
-
-            Log.i("MainActivity", "Connected");
-            //       Toast toast = Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT);
-            //      toast.show();
-
-        }
-
-        @Override
-        public void disconnected() {
-            //     Toast toast = Toast.makeText(getApplicationContext(), "Connection Lost", Toast.LENGTH_SHORT);
-            //    toast.show();
-            Log.i("MainActivity", "Connection Lost");
-        }
-
-        @Override
-        public void failure(int status, Throwable error) {
-            //    Toast toast = Toast.makeText(getApplicationContext(), "Error connecting", Toast.LENGTH_SHORT);
-            //    toast.show();
-            Log.e("MainActivity", "Error connecting", error);
-        }
-    };
 
     public void connectBoard() {
-        mwBoard.setConnectionStateHandler(stateHandler);
-        mwBoard.connect();
+        // check if Bluetooth is enabled
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            // Device does not support Bluetooth
+        } else {
+            // If Bluetooth is disabled
+            if (!mBluetoothAdapter.isEnabled()) {
+
+                //show alert dialog
+                AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+                alertDialog.setTitle("Alert");
+                alertDialog.setMessage("Bluetooth is disabled, you must enable Bluetooth to connect");
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // open bluetooth settings
+                                startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
+                            }
+                        });
+                alertDialog.show();
+
+                // keep toggle button unchecked
+                toggleCon.setChecked(false);
+                // If Bluetooth is enabled
+            }else{
+                // Change button text to connecting
+                toggleCon.setText("Connecting..");
+                toggleCon.setBackgroundColor(Color.parseColor("#4CAF50"));
+
+                // Show progress dialog
+                progress = new ProgressDialog(this);
+                progress.setTitle("Connecting");
+                progress.setMessage("Connecting to MetaWear...");
+                progress.show();
+
+                // connect
+                mwBoard.connect();
+            }
+        }
+
+
+
 
     }
 
     public void disconnectBoard() {
+        progress = new ProgressDialog(this);
+        progress.setTitle("Disconnecting");
+        progress.setMessage("Disconnecting from MetaWear...");
+        progress.show();
+
         mwBoard.disconnect();
 
     }
@@ -127,12 +192,14 @@ public class MainActivity extends Activity implements ServiceConnection {
                 this, Context.BIND_AUTO_CREATE);
 
 
+
+
         //connect/disconnect button
-        ToggleButton toggleCon = (ToggleButton) findViewById(R.id.conn);
+        toggleCon = (ToggleButton) findViewById(R.id.conn);
         toggleCon.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    retrieveBoard();
+//                    retrieveBoard();
                     connectBoard();
 
                 } else {
@@ -146,13 +213,16 @@ public class MainActivity extends Activity implements ServiceConnection {
         opening = false;
         closing = false;
 
-        Button btng = (Button) findViewById(R.id.button);
+       btng = (Button) findViewById(R.id.button);
         btng.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 Log.i("MainActivity", "start sampling sensor");
 
+                btng.setText("Logging...");
+                btng.setEnabled(false);
+                // initialize the gyro module
                 try {
                     gyroModule = mwBoard.getModule(Bmi160Gyro.class);
                 } catch (UnsupportedModuleException e) {
@@ -170,7 +240,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                                 final CartesianFloat spinData = msg.getData(CartesianFloat.class);
                                 //     Log.i("test", spinData.toString());
 
-
+                                // if x axes is less than -2, door is being open
                                 if (spinData.x() < -2) {
                                     if (!opening) {
                                         Log.i("test", spinData.toString());
@@ -179,17 +249,17 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
                                         /* Set the message */
-                                        message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date())+"\n";
+                                        message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
 
 
                                         mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
                                             @Override
                                             public void success(final Byte result) {
                                                 //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
-                                                      Log.i("test"+ "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
+                                                Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
 
                                                 /* Append battery level to the message */
-                                                message +=(String.format(result.toString(), Locale.US, "%d"));
+                                                message += (String.format(result.toString(), Locale.US, "%d"));
                                                 new Thread(new Client()).start();
                                             }
 
@@ -200,7 +270,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                                         });
 
 
-
+                                        // update boolean values
                                         opening = true;
                                         closing = false;
                                     }
@@ -210,7 +280,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                                         Log.i("test", spinData.toString());
                                         Log.i("test", "Door closing ");
                                         //set messsage
-                                        message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) +"\n";
+                                        message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
                                         // and start a thread to send the message to server
                                         new Thread(new Client()).start();
                                         opening = false;
@@ -219,9 +289,12 @@ public class MainActivity extends Activity implements ServiceConnection {
                                 }
                             }
                         });
+
+                        // set the date output rate to the minimum (25hz) for efficient power consumption
                         gyroModule.configure().setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_25_HZ)
                                 .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_250)
                                 .commit();
+                        // Start the gyroscope
                         gyroModule.start();
                     }
                 });
@@ -236,15 +309,13 @@ public class MainActivity extends Activity implements ServiceConnection {
     public void onDestroy() {
         super.onDestroy();
 
+        // disconnect board
+        mwBoard.disconnect();
         // Unbind the service when the activity is destroyed
         getApplicationContext().unbindService(this);
     }
 
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        // Typecast the binder to the service's LocalBinder class
-        serviceBinder = (MetaWearBleService.LocalBinder) service;
-    }
+
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
