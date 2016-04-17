@@ -25,14 +25,11 @@
 
 
 
-        <ToggleButton
+        <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Connect"
             android:id="@+id/conn"
-            android:checked="false"
-            android:textOn="disconnect"
-            android:textOff="Connect"
             android:background="#3F51B5"
             android:layout_alignParentTop="true"
             android:layout_marginTop="65dp"
