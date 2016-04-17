@@ -250,34 +250,34 @@ public class MainActivity extends Activity implements ServiceConnection {
                                             //     Log.i("test", spinData.toString());
 
                                             // if x axes is less than -2, door is being open
-                                            if (spinData.x() < -2) {
-                                                if (!opening) {
-                                                    Log.i("test", spinData.toString());
-                                                    Log.i("test", "Door Opening ");
+
+                                                    if (spinData.x() < -2) {
+                                                        if (!opening) {
+                                                            Log.i("test", spinData.toString());
+                                                            Log.i("test", "Door Opening ");
 
 
 
                                         /* Set the message */
-                                                    message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+                                                            message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
 
 
-                                                    mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
-                                                        @Override
-                                                        public void success(final Byte result) {
-                                                            //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
-                                                            Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
+                                                            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
+                                                                @Override
+                                                                public void success(final Byte result) {
+                                                                    //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
+                                                                    Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
 
                                                 /* Append battery level to the message */
-                                                            message += (String.format(result.toString(), Locale.US, "%d"));
-                                                            new Thread(new Client()).start();
-                                                        }
+                                                                    message += (String.format(result.toString(), Locale.US, "%d"));
+                                                                    new Thread(new Client()).start();
+                                                                }
 
-                                                        @Override
-                                                        public void failure(Throwable error) {
-                                                            Log.e("test", "Error reading battery level", error);
-                                                        }
-                                                    });
-
+                                                                @Override
+                                                                public void failure(Throwable error) {
+                                                                    Log.e("test", "Error reading battery level", error);
+                                                                }
+                                                            });
 
                                                     // update boolean values
                                                     opening = true;
@@ -304,8 +304,8 @@ public class MainActivity extends Activity implements ServiceConnection {
                                             .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_250)
                                             .commit();
                                     // Start the gyroscope
-                                    gyroModule.start();
-                                }
+                                            gyroModule.start();
+                                        }
                             });
 
 
@@ -316,7 +316,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                             Log.i("test", "Magnetometer Data Logging ");
 
 
-                            //!! BUG HERE!! UnsupportedModuleException: Module 'Bmm150Magnetometer' not supported for this firmware version ??
+
                             try {
                                 magModule = mwBoard.getModule(Bmm150Magnetometer.class);
                             } catch (UnsupportedModuleException e) {
@@ -338,7 +338,59 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                 public void process(Message msg) {
                                                     final CartesianFloat bField = msg.getData(CartesianFloat.class);
 
-                                                    Log.i("MainActivity", bField.toString());
+                                                   Log.i("MainActivity" +"Z", bField.z().toString());
+
+
+                                                    // if b Field is less than 3, door is being open
+                                                    if (bField.z() < -3) {
+                                                        if (!opening) {
+                                                            Log.i("test", bField.toString());
+                                                            Log.i("test", "Door Opening ");
+
+
+
+                                                       /* Set the message */
+                                                            message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+
+
+                                                            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
+                                                                @Override
+                                                                public void success(final Byte result) {
+                                                                    //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
+                                                                    Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
+
+                                                /* Append battery level to the message */
+                                                                    message += (String.format(result.toString(), Locale.US, "%d"));
+                                                                    new Thread(new Client()).start();
+                                                                }
+
+                                                                @Override
+                                                                public void failure(Throwable error) {
+                                                                    Log.e("test", "Error reading battery level", error);
+                                                                }
+                                                            });
+                                                            // update boolean values
+                                                            opening = true;
+                                                            closing = false;
+
+                                                        }
+
+                                                        }
+                                                    if (bField.z() > 3){
+                                                        if (!closing) {
+                                                            Log.i("test", bField.z().toString());
+                                                            Log.i("test", "Door closing ");
+                                                            //set messsage
+                                                            message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+                                                            // and start a thread to send the message to server
+                                                            new Thread(new Client()).start();
+                                                            opening = false;
+                                                            closing = true;
+                                                        }
+                                                    }
+
+
+
                                                 }
                                             });
 
