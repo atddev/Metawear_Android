@@ -11,17 +11,20 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.ServicConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.support.annotation.DrawableRes;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -79,6 +82,10 @@ public class MainActivity extends Activity implements ServiceConnection {
     Button ConBut;
     Button btng;
     RadioGroup btnr;
+    // battery level text
+    TextView batT;
+    // battery level image
+    ImageView batI;
 
 
 
@@ -105,6 +112,8 @@ public class MainActivity extends Activity implements ServiceConnection {
                 progress.dismiss();
 
                 btng.setEnabled(true);
+                // show updated battery status
+                updateBattery();
 
 
             }
@@ -183,6 +192,44 @@ public class MainActivity extends Activity implements ServiceConnection {
 
     }
 
+        // this method is to update the battery level in the UI
+        public void updateBattery() {
+
+
+            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
+                @Override
+                public void success(final Byte result) {
+                    ((TextView) findViewById(R.id.BattextView)).setText("Battery Level: " + String.format(Locale.US, "%d", result) + "%");
+                   int batlvl = result.intValue();
+
+                    // set icon
+                    if (batlvl > 80 && batlvl < 100) {
+                        batI.setImageResource(R.drawable.bat100);
+                    } else if (batlvl > 60 && batlvl < 80) {
+                        batI.setImageResource(R.drawable.bat60);
+                    } else if (batlvl > 40 && batlvl < 60) {
+                        batI.setImageResource(R.drawable.bat40);
+                    } else if (batlvl > 20 && batlvl < 40) {
+                        batI.setImageResource(R.drawable.bat20);
+                    } else if (batlvl > 10 && batlvl < 20) {
+                        batI.setImageResource(R.drawable.bat19);
+                    } else if (batlvl <= 5) {
+                        batI.setImageResource(R.drawable.bat5);
+                    }
+
+
+                }
+
+                @Override
+                public void failure(Throwable error) {
+                    // do nothing
+                }
+            });
+
+
+
+
+        }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -193,6 +240,10 @@ public class MainActivity extends Activity implements ServiceConnection {
         // Bind the service when the activity is created
         getApplicationContext().bindService(new Intent(this, MetaWearBleService.class),
                 this, Context.BIND_AUTO_CREATE);
+
+        batI = (ImageView) findViewById(R.id.imageView);
+        batT = (TextView) findViewById(R.id.BattextView);
+
 
         // set opening and closing to false
         opening = false;
@@ -342,7 +393,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
                                                     // if b Field is less than 3, door is being open
-                                                    if (bField.z() < -3) {
+                                                    if (bField.z() < -28) {
                                                         if (!opening) {
                                                             Log.i("test", bField.toString());
                                                             Log.i("test", "Door Opening ");
@@ -376,7 +427,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                         }
 
                                                         }
-                                                    if (bField.z() > 3){
+                                                    else if (bField.z() > - 12){
                                                         if (!closing) {
                                                             Log.i("test", bField.z().toString());
                                                             Log.i("test", "Door closing ");
