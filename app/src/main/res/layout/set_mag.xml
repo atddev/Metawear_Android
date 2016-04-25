@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/root"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:id="@+id/TextView_opval"
+        android:text="Set opening Value (or less)"
+        android:textStyle="bold" />
+    <EditText
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:id="@+id/EditText_opval"
+        android:inputType="number" />
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:id="@+id/TextView_clval"
+        android:text="Set closing value (or more)"
+        android:textStyle="bold" />
+    <EditText
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:id="@+id/EditText_clval"
+        android:inputType="number" />
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:id="@+id/TextView_curval"
+        android:textStyle="bold"
+        android:gravity="center" />
+</LinearLayout>

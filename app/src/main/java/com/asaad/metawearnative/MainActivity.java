@@ -11,16 +11,20 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServicConnection;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.DrawableRes;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -60,7 +64,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Locale;
 import java.util.Map;
-
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class MainActivity extends Activity implements ServiceConnection {
@@ -72,6 +77,7 @@ public class MainActivity extends Activity implements ServiceConnection {
     Bmm150Magnetometer magModule;
     boolean opening, closing;
 
+    int openv, closev;
     /* server ip in local network */
     public static final String SERVERIP = "192.168.1.124";
     /* udp port 3444 */
@@ -88,6 +94,79 @@ public class MainActivity extends Activity implements ServiceConnection {
     ImageView batI;
 
 
+
+    protected void showInputDialog() {
+
+        // get prompts.xml view
+        LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+        View promptView = layoutInflater.inflate(R.layout.set_mag, null);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+        alertDialogBuilder.setView(promptView);
+
+        try {
+            magModule = mwBoard.getModule(Bmm150Magnetometer.class);
+        } catch (UnsupportedModuleException e) {
+            e.printStackTrace();
+        }
+
+        final EditText opval = (EditText) promptView.findViewById(R.id.EditText_opval);
+        final EditText clval = (EditText) promptView.findViewById(R.id.EditText_clval);
+        final TextView curval = (TextView) promptView.findViewById(R.id.TextView_curval);
+        // setup a dialog window
+
+        alertDialogBuilder.setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                      // Check if numbers are valid
+                 //       String strPassword1 = password1.getText().toString();
+               //         String strPassword2 = password2.getText().toString();
+                        openv = Integer.parseInt(opval.getText().toString());
+                                closev = Integer.parseInt(clval.getText().toString());
+
+
+                        magModule.stop();
+
+                    }
+                })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                magModule.stop();
+                                dialog.cancel();
+
+                            }
+                        });
+
+        // create an alert dialog
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
+
+
+
+        //Set to low power mode
+        magModule.setPowerPrsest(Bmm150Magnetometer.PowerPreset.LOW_POWER);
+        magModule.enableBFieldSampling();
+
+        //Stream rotation data around the XYZ axes from the gyro sensor
+        magModule.routeData().fromBField().stream("mag_stream").commit()
+                .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
+                    @Override
+                    public void success(RouteManager result) {
+                        result.subscribe("mag_stream", new RouteManager.MessageHandler() {
+                            @Override
+                            public void process(Message msg) {
+                                final CartesianFloat bField = msg.getData(CartesianFloat.class);
+
+
+                                curval.setText(bField.z().toString());
+
+                                magModule.start();
+                            }
+                        });
+
+                    }
+                });
+    }
 
 
     @Override
@@ -195,41 +274,46 @@ public class MainActivity extends Activity implements ServiceConnection {
         // this method is to update the battery level in the UI
         public void updateBattery() {
 
+            if(mwBoard.isConnected()) {
+                mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
+                    @Override
+                    public void success(final Byte result) {
+                        ((TextView) findViewById(R.id.BattextView)).setText("Battery Level: " + String.format(Locale.US, "%d", result) + "%");
+                        int batlvl = result.intValue();
 
-            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
-                @Override
-                public void success(final Byte result) {
-                    ((TextView) findViewById(R.id.BattextView)).setText("Battery Level: " + String.format(Locale.US, "%d", result) + "%");
-                   int batlvl = result.intValue();
+                        // set icon
+                        if (batlvl > 80 && batlvl < 100) {
+                            batI.setImageResource(R.drawable.bat100);
+                        } else if (batlvl > 60 && batlvl < 80) {
+                            batI.setImageResource(R.drawable.bat60);
+                        } else if (batlvl > 40 && batlvl < 60) {
+                            batI.setImageResource(R.drawable.bat40);
+                        } else if (batlvl > 20 && batlvl < 40) {
+                            batI.setImageResource(R.drawable.bat20);
+                        } else if (batlvl > 10 && batlvl < 20) {
+                            batI.setImageResource(R.drawable.bat19);
+                        } else if (batlvl <= 5) {
+                            batI.setImageResource(R.drawable.bat5);
+                        }
 
-                    // set icon
-                    if (batlvl > 80 && batlvl < 100) {
-                        batI.setImageResource(R.drawable.bat100);
-                    } else if (batlvl > 60 && batlvl < 80) {
-                        batI.setImageResource(R.drawable.bat60);
-                    } else if (batlvl > 40 && batlvl < 60) {
-                        batI.setImageResource(R.drawable.bat40);
-                    } else if (batlvl > 20 && batlvl < 40) {
-                        batI.setImageResource(R.drawable.bat20);
-                    } else if (batlvl > 10 && batlvl < 20) {
-                        batI.setImageResource(R.drawable.bat19);
-                    } else if (batlvl <= 5) {
-                        batI.setImageResource(R.drawable.bat5);
+
                     }
 
+                    @Override
+                    public void failure(Throwable error) {
+                        // do nothing
+                    }
+                });
 
-                }
-
-                @Override
-                public void failure(Throwable error) {
-                    // do nothing
-                }
-            });
-
-
-
+            } // end if conncete
 
         }
+
+    public void OnBatteryUpdate(View v) {
+        showInputDialog();
+        updateBattery();
+        Toast.makeText(MainActivity.this, "Updating Battery", Toast.LENGTH_LONG).show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -241,10 +325,25 @@ public class MainActivity extends Activity implements ServiceConnection {
         getApplicationContext().bindService(new Intent(this, MetaWearBleService.class),
                 this, Context.BIND_AUTO_CREATE);
 
+        // battery icon
         batI = (ImageView) findViewById(R.id.imageView);
+        // battery level text
         batT = (TextView) findViewById(R.id.BattextView);
 
+        final LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
+
+
+
+        // set meg value dilog
+
+        final View layout = inflater.inflate(R.layout.set_mag, (ViewGroup) findViewById(R.id.root));
+        // opening value
+        final EditText opValue = (EditText) layout.findViewById(R.id.EditText_opval);
+        // closeing value
+        final EditText clValue = (EditText) layout.findViewById(R.id.EditText_clval);
+        // current value
+        final TextView curValue = (TextView) layout.findViewById(R.id.TextView_curval);
         // set opening and closing to false
         opening = false;
         closing = false;
@@ -256,15 +355,18 @@ public class MainActivity extends Activity implements ServiceConnection {
             @Override
             public void onClick(View v) {
 
-                if(mwBoard.isConnected()){
+                if (mwBoard.isConnected()) {
                     disconnectBoard();
-                }else {
+                } else {
                     connectBoard();
                 }
 
             }
 
-                });
+        });
+
+
+
 
 
                 // Choose sensor radio buttons group
@@ -280,7 +382,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                         Log.i("MainActivity", "start sampling sensor");
                         // if gyto is selected
                         if (btnr.getCheckedRadioButtonId() == R.id.radio_gyro) {
-                            btng.setText("Logging...");
+                            btng.setText("Logging (Gyro)...");
                             btng.setEnabled(false);
                             // initialize the gyro module
                             try {
@@ -365,7 +467,8 @@ public class MainActivity extends Activity implements ServiceConnection {
                         if (btnr.getCheckedRadioButtonId() == R.id.radio_mag) {
                             // log magn
                             Log.i("test", "Magnetometer Data Logging ");
-
+                            btng.setText("Logging (Magmeo)...");
+                            btng.setEnabled(false);
 
 
                             try {
@@ -389,11 +492,11 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                 public void process(Message msg) {
                                                     final CartesianFloat bField = msg.getData(CartesianFloat.class);
 
-                                                   Log.i("MainActivity" +"Z", bField.z().toString());
+                                  //                 Log.i("MainActivity" +"Z", bField.z().toString());
 
 
-                                                    // if b Field is less than 3, door is being open
-                                                    if (bField.z() < -28) {
+
+                                                    if (bField.z() > openv) {
                                                         if (!opening) {
                                                             Log.i("test", bField.toString());
                                                             Log.i("test", "Door Opening ");
@@ -427,7 +530,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                         }
 
                                                         }
-                                                    else if (bField.z() > - 12){
+                                                    else if (bField.z() < closev){
                                                         if (!closing) {
                                                             Log.i("test", bField.z().toString());
                                                             Log.i("test", "Door closing ");

@@ -59,15 +59,15 @@
             android:layout_width="60dp"
             android:layout_height="wrap_content"
             android:id="@+id/imageView"
-            android:src="@drawable/bat100"
             android:layout_alignParentBottom="true"
+            android:onClick="OnBatteryUpdate"
             android:layout_centerHorizontal="true" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Battery Level"
+            android:text=" "
             android:id="@+id/BattextView"
             android:layout_alignTop="@+id/imageView"
             android:layout_centerHorizontal="true" />
