@@ -22,6 +22,7 @@
         android:id="@+id/TextView_clval"
         android:text="Set closing value (or more)"
         android:textStyle="bold" />
+
     <EditText
         android:layout_height="wrap_content"
         android:layout_width="match_parent"

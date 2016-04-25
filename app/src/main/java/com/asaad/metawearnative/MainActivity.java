@@ -463,6 +463,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
                         }//end if gyro
+
                         // if magnetometer
                         if (btnr.getCheckedRadioButtonId() == R.id.radio_mag) {
                             // log magn
