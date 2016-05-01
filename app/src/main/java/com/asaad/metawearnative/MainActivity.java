@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -92,6 +93,8 @@ public class MainActivity extends Activity implements ServiceConnection {
     TextView batT;
     // battery level image
     ImageView batI;
+
+    SharedPreferences prefs;
 
 
 
@@ -195,15 +198,25 @@ public class MainActivity extends Activity implements ServiceConnection {
                 updateBattery();
 
 
+
+
             }
 
             @Override
             public void disconnected() {
                 //  Dismiss the progress dialog
                 progress.dismiss();
+                //show toast
                 Toast.makeText(MainActivity.this, "Successfully Disconnected", Toast.LENGTH_LONG).show();
+                // change disconnect button
                 ConBut.setBackgroundColor(Color.parseColor("#3F51B5"));
                 ConBut.setText("Connect");
+
+                //change logging button do default
+                btng.setText("START LOGGING");
+                btng.setEnabled(true);
+
+
 
 
             }
@@ -267,6 +280,10 @@ public class MainActivity extends Activity implements ServiceConnection {
         progress.setMessage("Disconnecting from MetaWear...");
         progress.show();
 
+
+        // Unbind the service when board disconnected
+        getApplicationContext().unbindService(this);
+
         mwBoard.disconnect();
 
     }
@@ -321,6 +338,8 @@ public class MainActivity extends Activity implements ServiceConnection {
         setContentView(R.layout.activity_main);
 
 
+
+
         // Bind the service when the activity is created
         getApplicationContext().bindService(new Intent(this, MetaWearBleService.class),
                 this, Context.BIND_AUTO_CREATE);
@@ -347,6 +366,48 @@ public class MainActivity extends Activity implements ServiceConnection {
         // set opening and closing to false
         opening = false;
         closing = false;
+
+        prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
+
+
+        // restore UI status
+        if(mwBoard != null && mwBoard.isConnected()){
+            ConBut.setBackgroundColor(Color.parseColor("#009688"));
+            ConBut.setText("Disconnect");
+
+
+            btng.setEnabled(true);
+            // show updated battery status
+            updateBattery();
+
+            /// if logging, check which sensor and settext
+            prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
+
+            int prefValue = prefs.getInt("sensor",0);
+            // if gyro is logging
+            if(prefValue== 1)
+            {
+                btng.setText("Logging (Gyro)...");
+                btng.setEnabled(false);
+                // set gyro radio button to checked
+                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                gyb.setChecked(true);
+            }
+            // if magnetometer is logging
+            if(prefValue== 2)
+            {
+                btng.setText("Logging (Magneto)...");
+                btng.setEnabled(false);
+                // set gyro radio button to checked
+                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                gyb.setChecked(true);
+            }
+        }
+
+
+
+
+
 
 
         //connect/disconnect button
@@ -380,10 +441,13 @@ public class MainActivity extends Activity implements ServiceConnection {
                     public void onClick(View v) {
 
                         Log.i("MainActivity", "start sampling sensor");
-                        // if gyto is selected
+                        // if gyro is selected
                         if (btnr.getCheckedRadioButtonId() == R.id.radio_gyro) {
                             btng.setText("Logging (Gyro)...");
                             btng.setEnabled(false);
+
+                            // save sensor 1 (gyro) in use
+                            prefs.edit().putInt("sensor", 1).apply();
                             // initialize the gyro module
                             try {
                                 gyroModule = mwBoard.getModule(Bmi160Gyro.class);
@@ -468,9 +532,11 @@ public class MainActivity extends Activity implements ServiceConnection {
                         if (btnr.getCheckedRadioButtonId() == R.id.radio_mag) {
                             // log magn
                             Log.i("test", "Magnetometer Data Logging ");
-                            btng.setText("Logging (Magmeo)...");
+                            btng.setText("Logging (Magneto)...");
                             btng.setEnabled(false);
 
+                            // save sensor 2 (Magne) in use
+                            prefs.edit().putInt("sensor", 2).apply();
 
                             try {
                                 magModule = mwBoard.getModule(Bmm150Magnetometer.class);
@@ -566,10 +632,10 @@ public class MainActivity extends Activity implements ServiceConnection {
             public void onDestroy() {
                 super.onDestroy();
 
-                // disconnect board
-                mwBoard.disconnect();
-                // Unbind the service when the activity is destroyed
+                // Unbind the service when board disconnected
+                if (mwBoard != null && !mwBoard.isConnected()) {
                 getApplicationContext().unbindService(this);
+            }
             }
 
 
@@ -577,6 +643,54 @@ public class MainActivity extends Activity implements ServiceConnection {
             public void onServiceDisconnected(ComponentName componentName) {
             }
 
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        // restore UI status
+        if(mwBoard != null && mwBoard.isConnected()){
+            ConBut.setBackgroundColor(Color.parseColor("#009688"));
+            ConBut.setText("Disconnect");
+
+
+            btng.setEnabled(true);
+            // show updated battery status
+            updateBattery();
+
+            /// if logging, check which sensor and settext
+            prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
+
+            int prefValue = prefs.getInt("sensor",0);
+            // if gyro is logging
+            if(prefValue== 1)
+            {
+                btng.setText("Logging (Gyro)...");
+                btng.setEnabled(false);
+                // set gyro radio button to checked
+                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                gyb.setChecked(true);
+
+
+
+            }
+            // if magnetometer is logging
+            if(prefValue== 2)
+            {
+                btng.setText("Logging (Magneto)...");
+                btng.setEnabled(false);
+                // set gyro radio button to checked
+                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                gyb.setChecked(true);
+
+
+            }
+
+
+
+
+        }
+
+    }
 
             /* Udp client to send logs to local server (raspberry pi)*/
     /* Note: Udp server soruce code is included in the (/res) directory*/
