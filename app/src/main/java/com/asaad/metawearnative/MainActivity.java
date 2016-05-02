@@ -2,6 +2,8 @@ package com.asaad.metawearnative;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.usage.UsageEvents;
 import android.bluetooth.BluetoothAdapter;
@@ -19,6 +21,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.DrawableRes;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -97,7 +100,6 @@ public class MainActivity extends Activity implements ServiceConnection {
     SharedPreferences prefs;
 
 
-
     protected void showInputDialog() {
 
         // get prompts.xml view
@@ -120,11 +122,11 @@ public class MainActivity extends Activity implements ServiceConnection {
         alertDialogBuilder.setCancelable(false)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                      // Check if numbers are valid
-                 //       String strPassword1 = password1.getText().toString();
-               //         String strPassword2 = password2.getText().toString();
+                        // Check if numbers are valid
+                        //       String strPassword1 = password1.getText().toString();
+                        //         String strPassword2 = password2.getText().toString();
                         openv = Integer.parseInt(opval.getText().toString());
-                                closev = Integer.parseInt(clval.getText().toString());
+                        closev = Integer.parseInt(clval.getText().toString());
 
 
                         magModule.stop();
@@ -143,7 +145,6 @@ public class MainActivity extends Activity implements ServiceConnection {
         // create an alert dialog
         AlertDialog alert = alertDialogBuilder.create();
         alert.show();
-
 
 
         //Set to low power mode
@@ -176,12 +177,12 @@ public class MainActivity extends Activity implements ServiceConnection {
     public void onServiceConnected(ComponentName name, IBinder service) {
         MetaWearBleService.LocalBinder binder = (MetaWearBleService.LocalBinder) service;
 
-        final BluetoothManager btManager= (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        final BluetoothDevice remoteDevice= btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
+        final BluetoothManager btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothDevice remoteDevice = btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
 
         binder.executeOnUiThread();
         //binder.clearCachedState(remoteDevice);
-        mwBoard= binder.getMetaWearBoard(remoteDevice);
+        mwBoard = binder.getMetaWearBoard(remoteDevice);
         mwBoard.setConnectionStateHandler(new MetaWearBoard.ConnectionStateHandler() {
             @Override
             public void connected() {
@@ -196,8 +197,6 @@ public class MainActivity extends Activity implements ServiceConnection {
                 btng.setEnabled(true);
                 // show updated battery status
                 updateBattery();
-
-
 
 
             }
@@ -215,8 +214,6 @@ public class MainActivity extends Activity implements ServiceConnection {
                 //change logging button do default
                 btng.setText("START LOGGING");
                 btng.setEnabled(true);
-
-
 
 
             }
@@ -256,7 +253,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                 alertDialog.show();
 
                 // If Bluetooth is enabled
-            }else{
+            } else {
 
                 // Show progress dialog
                 progress = new ProgressDialog(this);
@@ -268,8 +265,6 @@ public class MainActivity extends Activity implements ServiceConnection {
                 mwBoard.connect();
             }
         }
-
-
 
 
     }
@@ -288,43 +283,43 @@ public class MainActivity extends Activity implements ServiceConnection {
 
     }
 
-        // this method is to update the battery level in the UI
-        public void updateBattery() {
+    // this method is to update the battery level in the UI
+    public void updateBattery() {
 
-            if(mwBoard.isConnected()) {
-                mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
-                    @Override
-                    public void success(final Byte result) {
-                        ((TextView) findViewById(R.id.BattextView)).setText("Battery Level: " + String.format(Locale.US, "%d", result) + "%");
-                        int batlvl = result.intValue();
+        if (mwBoard.isConnected()) {
+            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
+                @Override
+                public void success(final Byte result) {
+                    ((TextView) findViewById(R.id.BattextView)).setText("Battery Level: " + String.format(Locale.US, "%d", result) + "%");
+                    int batlvl = result.intValue();
 
-                        // set icon
-                        if (batlvl > 80 && batlvl < 100) {
-                            batI.setImageResource(R.drawable.bat100);
-                        } else if (batlvl > 60 && batlvl < 80) {
-                            batI.setImageResource(R.drawable.bat60);
-                        } else if (batlvl > 40 && batlvl < 60) {
-                            batI.setImageResource(R.drawable.bat40);
-                        } else if (batlvl > 20 && batlvl < 40) {
-                            batI.setImageResource(R.drawable.bat20);
-                        } else if (batlvl > 10 && batlvl < 20) {
-                            batI.setImageResource(R.drawable.bat19);
-                        } else if (batlvl <= 5) {
-                            batI.setImageResource(R.drawable.bat5);
-                        }
-
-
+                    // set icon
+                    if (batlvl > 80 && batlvl <= 100) {
+                        batI.setImageResource(R.drawable.bat100);
+                    } else if (batlvl > 60 && batlvl < 80) {
+                        batI.setImageResource(R.drawable.bat60);
+                    } else if (batlvl > 40 && batlvl < 60) {
+                        batI.setImageResource(R.drawable.bat40);
+                    } else if (batlvl > 20 && batlvl < 40) {
+                        batI.setImageResource(R.drawable.bat20);
+                    } else if (batlvl > 10 && batlvl < 20) {
+                        batI.setImageResource(R.drawable.bat19);
+                    } else if (batlvl <= 10) {
+                        batI.setImageResource(R.drawable.bat5);
                     }
 
-                    @Override
-                    public void failure(Throwable error) {
-                        // do nothing
-                    }
-                });
 
-            } // end if conncete
+                }
 
-        }
+                @Override
+                public void failure(Throwable error) {
+                    // do nothing
+                }
+            });
+
+        } // end if conncete
+
+    }
 
     public void OnBatteryUpdate(View v) {
         showInputDialog();
@@ -338,8 +333,6 @@ public class MainActivity extends Activity implements ServiceConnection {
         setContentView(R.layout.activity_main);
 
 
-
-
         // Bind the service when the activity is created
         getApplicationContext().bindService(new Intent(this, MetaWearBleService.class),
                 this, Context.BIND_AUTO_CREATE);
@@ -350,8 +343,6 @@ public class MainActivity extends Activity implements ServiceConnection {
         batT = (TextView) findViewById(R.id.BattextView);
 
         final LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-
 
 
         // set meg value dilog
@@ -371,7 +362,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
         // restore UI status
-        if(mwBoard != null && mwBoard.isConnected()){
+        if (mwBoard != null && mwBoard.isConnected()) {
             ConBut.setBackgroundColor(Color.parseColor("#009688"));
             ConBut.setText("Disconnect");
 
@@ -383,31 +374,24 @@ public class MainActivity extends Activity implements ServiceConnection {
             /// if logging, check which sensor and settext
             prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
 
-            int prefValue = prefs.getInt("sensor",0);
+            int prefValue = prefs.getInt("sensor", 0);
             // if gyro is logging
-            if(prefValue== 1)
-            {
+            if (prefValue == 1) {
                 btng.setText("Logging (Gyro)...");
                 btng.setEnabled(false);
                 // set gyro radio button to checked
-                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                RadioButton gyb = (RadioButton) findViewById(R.id.radio_gyro);
                 gyb.setChecked(true);
             }
             // if magnetometer is logging
-            if(prefValue== 2)
-            {
+            if (prefValue == 2) {
                 btng.setText("Logging (Magneto)...");
                 btng.setEnabled(false);
                 // set gyro radio button to checked
-                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                RadioButton gyb = (RadioButton) findViewById(R.id.radio_gyro);
                 gyb.setChecked(true);
             }
         }
-
-
-
-
-
 
 
         //connect/disconnect button
@@ -427,85 +411,184 @@ public class MainActivity extends Activity implements ServiceConnection {
         });
 
 
+        // Choose sensor radio buttons group
+        btnr = (RadioGroup) findViewById(R.id.radio);
 
 
+        // start sensor button
+        btng = (Button) findViewById(R.id.button);
+        btng.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-                // Choose sensor radio buttons group
-                btnr = (RadioGroup) findViewById(R.id.radio);
+                Log.i("MainActivity", "start sampling sensor");
+                // if gyro is selected
+                if (btnr.getCheckedRadioButtonId() == R.id.radio_gyro) {
+                    btng.setText("Logging (Gyro)...");
+                    btng.setEnabled(false);
 
-
-                // start sensor button
-                btng = (Button) findViewById(R.id.button);
-                btng.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        Log.i("MainActivity", "start sampling sensor");
-                        // if gyro is selected
-                        if (btnr.getCheckedRadioButtonId() == R.id.radio_gyro) {
-                            btng.setText("Logging (Gyro)...");
-                            btng.setEnabled(false);
-
-                            // save sensor 1 (gyro) in use
-                            prefs.edit().putInt("sensor", 1).apply();
-                            // initialize the gyro module
-                            try {
-                                gyroModule = mwBoard.getModule(Bmi160Gyro.class);
-                            } catch (UnsupportedModuleException e) {
-                                e.printStackTrace();
-                            }
+                    // save sensor 1 (gyro) in use
+                    prefs.edit().putInt("sensor", 1).apply();
+                    // initialize the gyro module
+                    try {
+                        gyroModule = mwBoard.getModule(Bmi160Gyro.class);
+                    } catch (UnsupportedModuleException e) {
+                        e.printStackTrace();
+                    }
 
 
-                            gyroModule.routeData().fromAxes().stream("gyroAxisSub")
-                                    .commit().onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
+                    gyroModule.routeData().fromAxes().stream("gyroAxisSub")
+                            .commit().onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
+                        @Override
+                        public void success(RouteManager result) {
+                            result.subscribe("gyroAxisSub", new RouteManager.MessageHandler() {
                                 @Override
-                                public void success(RouteManager result) {
-                                    result.subscribe("gyroAxisSub", new RouteManager.MessageHandler() {
-                                        @Override
-                                        public void process(Message msg) {
-                                            final CartesianFloat spinData = msg.getData(CartesianFloat.class);
-                                            //     Log.i("test", spinData.toString());
+                                public void process(Message msg) {
+                                    final CartesianFloat spinData = msg.getData(CartesianFloat.class);
+                                    //     Log.i("test", spinData.toString());
 
-                                            // if x axes is less than -2, door is being open
+                                    // if x axes is less than -2, door is being open
 
-                                                    if (spinData.x() < -2) {
-                                                        if (!opening) {
-                                                            Log.i("test", spinData.toString());
-                                                            Log.i("test", "Door Opening ");
+                                    if (spinData.x() < -2) {
+                                        if (!opening) {
+                                            Log.i("test", spinData.toString());
+                                            Log.i("test", "Door Opening ");
 
 
 
                                         /* Set the message */
-                                                            message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+                                            message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
 
 
-                                                            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
-                                                                @Override
-                                                                public void success(final Byte result) {
-                                                                    //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
-                                                                    Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
+                                            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
+                                                @Override
+                                                public void success(final Byte result) {
+                                                    //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
+                                                    Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
 
                                                 /* Append battery level to the message */
-                                                                    message += (String.format(result.toString(), Locale.US, "%d"));
-                                                                    new Thread(new Client()).start();
-                                                                }
+                                                    message += (String.format(result.toString(), Locale.US, "%d"));
 
-                                                                @Override
-                                                                public void failure(Throwable error) {
-                                                                    Log.e("test", "Error reading battery level", error);
-                                                                }
-                                                            });
+                                                    String curTime = android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()).toString();
+                                                    new Thread(new Client()).start();
+                                                    SendToServer sendTask = new SendToServer();
+                                                    sendTask.execute("Door Opening", curTime);
 
+
+
+                                                   // SendToServer.SendTask(message);
+                                                }
+
+                                                @Override
+                                                public void failure(Throwable error) {
+                                                    Log.e("test", "Error reading battery level", error);
+                                                }
+                                            });
+
+                                            // update boolean values
+                                            opening = true;
+                                            closing = false;
+                                        }
+                                    }
+                                    if (spinData.x() > 2) {
+                                        if (!closing) {
+                                            Log.i("test", spinData.toString());
+                                            Log.i("test", "Door closing ");
+                                            //set messsage
+                                            message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+                                            // and start a thread to send the message to server
+                                            new Thread(new Client()).start();
+                                            opening = false;
+                                            closing = true;
+                                        }
+                                    }
+                                }
+                            });
+
+                            // set the data output rate to the minimum (25hz) for efficient power consumption
+                            gyroModule.configure().setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_25_HZ)
+                                    .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_250)
+                                    .commit();
+                            // Start the gyroscope
+                            gyroModule.start();
+                        }
+                    });
+
+
+                }//end if gyro
+
+                // if magnetometer
+                if (btnr.getCheckedRadioButtonId() == R.id.radio_mag) {
+                    // log magn
+                    Log.i("test", "Magnetometer Data Logging ");
+                    btng.setText("Logging (Magneto)...");
+                    btng.setEnabled(false);
+
+                    // save sensor 2 (Magne) in use
+                    prefs.edit().putInt("sensor", 2).apply();
+
+                    try {
+                        magModule = mwBoard.getModule(Bmm150Magnetometer.class);
+                    } catch (UnsupportedModuleException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    //Set to low power mode
+                    magModule.setPowerPrsest(Bmm150Magnetometer.PowerPreset.LOW_POWER);
+                    magModule.enableBFieldSampling();
+
+                    //Stream rotation data around the XYZ axes from the gyro sensor
+                    magModule.routeData().fromBField().stream("mag_stream").commit()
+                            .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
+                                @Override
+                                public void success(RouteManager result) {
+                                    result.subscribe("mag_stream", new RouteManager.MessageHandler() {
+                                        @Override
+                                        public void process(Message msg) {
+                                            final CartesianFloat bField = msg.getData(CartesianFloat.class);
+
+                                            //                 Log.i("MainActivity" +"Z", bField.z().toString());
+
+
+                                            if (bField.z() > openv) {
+                                                if (!opening) {
+                                                    Log.i("test", bField.toString());
+                                                    Log.i("test", "Door Opening ");
+
+
+
+                                                       /* Set the message */
+                                                    message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+
+
+                                                    mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
+                                                        @Override
+                                                        public void success(final Byte result) {
+                                                            //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
+                                                            Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
+
+                                                /* Append battery level to the message */
+                                                            message += (String.format(result.toString(), Locale.US, "%d"));
+                                                            new Thread(new Client()).start();
+                                                        }
+
+                                                        @Override
+                                                        public void failure(Throwable error) {
+                                                            Log.e("test", "Error reading battery level", error);
+                                                        }
+                                                    });
                                                     // update boolean values
                                                     opening = true;
                                                     closing = false;
+
                                                 }
-                                            }
-                                            if (spinData.x() > 2) {
+
+                                            } else if (bField.z() < closev) {
                                                 if (!closing) {
-                                                    Log.i("test", spinData.toString());
+                                                    Log.i("test", bField.z().toString());
                                                     Log.i("test", "Door closing ");
-                                                    //set messsage
+                                                    //set message
                                                     message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
                                                     // and start a thread to send the message to server
                                                     new Thread(new Client()).start();
@@ -513,142 +596,45 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                     closing = true;
                                                 }
                                             }
+
+
                                         }
                                     });
 
-                                    // set the data output rate to the minimum (25hz) for efficient power consumption
-                                    gyroModule.configure().setOutputDataRate(Bmi160Gyro.OutputDataRate.ODR_25_HZ)
-                                            .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_250)
-                                            .commit();
-                                    // Start the gyroscope
-                                            gyroModule.start();
-                                        }
+                                    magModule.start();
+                                }
                             });
 
 
-                        }//end if gyro
+                }
 
-                        // if magnetometer
-                        if (btnr.getCheckedRadioButtonId() == R.id.radio_mag) {
-                            // log magn
-                            Log.i("test", "Magnetometer Data Logging ");
-                            btng.setText("Logging (Magneto)...");
-                            btng.setEnabled(false);
-
-                            // save sensor 2 (Magne) in use
-                            prefs.edit().putInt("sensor", 2).apply();
-
-                            try {
-                                magModule = mwBoard.getModule(Bmm150Magnetometer.class);
-                            } catch (UnsupportedModuleException e) {
-                                e.printStackTrace();
-                            }
-
-
-                            //Set to low power mode
-                            magModule.setPowerPrsest(Bmm150Magnetometer.PowerPreset.LOW_POWER);
-                            magModule.enableBFieldSampling();
-
-                            //Stream rotation data around the XYZ axes from the gyro sensor
-                            magModule.routeData().fromBField().stream("mag_stream").commit()
-                                    .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
-                                        @Override
-                                        public void success(RouteManager result) {
-                                            result.subscribe("mag_stream", new RouteManager.MessageHandler() {
-                                                @Override
-                                                public void process(Message msg) {
-                                                    final CartesianFloat bField = msg.getData(CartesianFloat.class);
-
-                                  //                 Log.i("MainActivity" +"Z", bField.z().toString());
-
-
-
-                                                    if (bField.z() > openv) {
-                                                        if (!opening) {
-                                                            Log.i("test", bField.toString());
-                                                            Log.i("test", "Door Opening ");
-
-
-
-                                                       /* Set the message */
-                                                            message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
-
-
-                                                            mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
-                                                                @Override
-                                                                public void success(final Byte result) {
-                                                                    //  ((TextView) findViewById(R.id.textView2)).setText(String.format(Locale.US, "%d", result));
-                                                                    Log.i("test" + "ng battery level %d", String.format(result.toString(), Locale.US, "%d"));
-
-                                                /* Append battery level to the message */
-                                                                    message += (String.format(result.toString(), Locale.US, "%d"));
-                                                                    new Thread(new Client()).start();
-                                                                }
-
-                                                                @Override
-                                                                public void failure(Throwable error) {
-                                                                    Log.e("test", "Error reading battery level", error);
-                                                                }
-                                                            });
-                                                            // update boolean values
-                                                            opening = true;
-                                                            closing = false;
-
-                                                        }
-
-                                                        }
-                                                    else if (bField.z() < closev){
-                                                        if (!closing) {
-                                                            Log.i("test", bField.z().toString());
-                                                            Log.i("test", "Door closing ");
-                                                            //set messsage
-                                                            message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
-                                                            // and start a thread to send the message to server
-                                                            new Thread(new Client()).start();
-                                                            opening = false;
-                                                            closing = true;
-                                                        }
-                                                    }
-
-
-
-                                                }
-                                            });
-
-                                            magModule.start();
-                                        }
-                                    });
-
-
-                        }
-
-
-                    }
-                });
 
             }
+        });
 
-            @Override
-            public void onDestroy() {
-                super.onDestroy();
+    }
 
-                // Unbind the service when board disconnected
-                if (mwBoard != null && !mwBoard.isConnected()) {
-                getApplicationContext().unbindService(this);
-            }
-            }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
 
-
-            @Override
-            public void onServiceDisconnected(ComponentName componentName) {
-            }
+        // Unbind the service when board disconnected
+        if (mwBoard != null && !mwBoard.isConnected()) {
+            getApplicationContext().unbindService(this);
+        }
+    }
 
 
     @Override
-    public void onResume(){
+    public void onServiceDisconnected(ComponentName componentName) {
+    }
+
+
+    @Override
+    public void onResume() {
         super.onResume();
         // restore UI status
-        if(mwBoard != null && mwBoard.isConnected()){
+        if (mwBoard != null && mwBoard.isConnected()) {
             ConBut.setBackgroundColor(Color.parseColor("#009688"));
             ConBut.setText("Disconnect");
 
@@ -660,60 +646,55 @@ public class MainActivity extends Activity implements ServiceConnection {
             /// if logging, check which sensor and settext
             prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
 
-            int prefValue = prefs.getInt("sensor",0);
+            int prefValue = prefs.getInt("sensor", 0);
             // if gyro is logging
-            if(prefValue== 1)
-            {
+            if (prefValue == 1) {
                 btng.setText("Logging (Gyro)...");
                 btng.setEnabled(false);
                 // set gyro radio button to checked
-                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                RadioButton gyb = (RadioButton) findViewById(R.id.radio_gyro);
                 gyb.setChecked(true);
-
 
 
             }
             // if magnetometer is logging
-            if(prefValue== 2)
-            {
+            if (prefValue == 2) {
                 btng.setText("Logging (Magneto)...");
                 btng.setEnabled(false);
                 // set gyro radio button to checked
-                RadioButton gyb =(RadioButton)findViewById(R.id.radio_gyro);
+                RadioButton gyb = (RadioButton) findViewById(R.id.radio_gyro);
                 gyb.setChecked(true);
 
 
             }
-
-
 
 
         }
 
     }
 
-            /* Udp client to send logs to local server (raspberry pi)*/
+    /* Udp client to send logs to local server (raspberry pi)*/
     /* Note: Udp server soruce code is included in the (/res) directory*/
-            public class Client implements Runnable {
+    public class Client implements Runnable {
 
-                @Override
-                public void run() {
-                    try {
+        @Override
+        public void run() {
+            try {
 
-                        // send message to Pi
-                        InetAddress serverAddr = InetAddress.getByName(SERVERIP);
-                        DatagramSocket clientSocket = new DatagramSocket();
-                        byte[] sendData = new byte[1024];
-                        String sentence = message;
-                        sendData = sentence.getBytes();
-                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddr, SERVERPORT);
-                        clientSocket.send(sendPacket);
+                // send message to Pi
+                InetAddress serverAddr = InetAddress.getByName(SERVERIP);
+                DatagramSocket clientSocket = new DatagramSocket();
+                byte[] sendData = new byte[1024];
+                String sentence = message;
+                sendData = sentence.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddr, SERVERPORT);
+                clientSocket.send(sendPacket);
 
 
-                        clientSocket.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                clientSocket.close();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
+    }
+}
