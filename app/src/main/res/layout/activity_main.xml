@@ -68,20 +68,19 @@
             android:layout_alignTop="@+id/imageView"
             android:layout_centerHorizontal="true" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Status: \n"
-            android:background="@drawable/boarder"
-            android:includeFontPadding="true"
-            android:padding="5dp"
-            android:id="@+id/textView"
-            android:layout_marginTop="10dp"
-            android:layout_below="@id/radio"
-            android:layout_centerHorizontal="true" />
 
-
+    <Button
+        android:layout_width="90dp"
+        android:layout_height="60dp"
+        android:text="Configure Magnetometer"
+        android:textColor="#ffffff"
+        android:textSize="10dp"
+        android:id="@+id/conmag"
+        android:enabled="false"
+        android:background="#2196F3"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/radio"
+        android:layout_centerHorizontal="true" />
 
 
 

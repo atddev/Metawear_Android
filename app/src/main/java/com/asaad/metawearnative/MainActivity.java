@@ -15,6 +15,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -54,9 +55,12 @@ import com.mbientlab.metawear.module.DataProcessor;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.Logging;
 import com.mbientlab.metawear.module.Macro;
+import com.mbientlab.metawear.module.Switch;
+import com.mbientlab.metawear.processor.Accumulator;
 import com.mbientlab.metawear.processor.Average;
 import com.mbientlab.metawear.processor.Comparison;
 import com.mbientlab.metawear.module.Bmi160Accelerometer.*;
+import com.mbientlab.metawear.processor.Maths;
 import com.mbientlab.metawear.processor.Rss;
 import com.mbientlab.metawear.processor.Threshold;
 
@@ -79,6 +83,8 @@ public class MainActivity extends Activity implements ServiceConnection {
     private MetaWearBoard mwBoard;
     Bmi160Gyro gyroModule;
     Bmm150Magnetometer magModule;
+    Switch switchModule;
+    Led ledModule;
     boolean opening, closing;
 
     int openv, closev;
@@ -91,6 +97,8 @@ public class MainActivity extends Activity implements ServiceConnection {
     private ProgressDialog progress;
     Button ConBut;
     Button btng;
+    // confiugre magn button
+    Button megcon;
     RadioGroup btnr;
     // battery level text
     TextView batT;
@@ -100,7 +108,7 @@ public class MainActivity extends Activity implements ServiceConnection {
     SharedPreferences prefs;
 
 
-    protected void showInputDialog() {
+    public void showInputDialog() {
 
         // get prompts.xml view
         LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
@@ -122,9 +130,7 @@ public class MainActivity extends Activity implements ServiceConnection {
         alertDialogBuilder.setCancelable(false)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        // Check if numbers are valid
-                        //       String strPassword1 = password1.getText().toString();
-                        //         String strPassword2 = password2.getText().toString();
+
                         openv = Integer.parseInt(opval.getText().toString());
                         closev = Integer.parseInt(clval.getText().toString());
 
@@ -193,7 +199,8 @@ public class MainActivity extends Activity implements ServiceConnection {
                 ConBut.setText("Disconnect");
                 //  Dismiss the progress dialog
                 progress.dismiss();
-
+                //enable buttons
+                megcon.setEnabled(true);
                 btng.setEnabled(true);
                 // show updated battery status
                 updateBattery();
@@ -213,7 +220,8 @@ public class MainActivity extends Activity implements ServiceConnection {
 
                 //change logging button do default
                 btng.setText("START LOGGING");
-                btng.setEnabled(true);
+                btng.setEnabled(false);
+
 
 
             }
@@ -283,6 +291,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
     }
 
+
     // this method is to update the battery level in the UI
     public void updateBattery() {
 
@@ -322,7 +331,6 @@ public class MainActivity extends Activity implements ServiceConnection {
     }
 
     public void OnBatteryUpdate(View v) {
-        showInputDialog();
         updateBattery();
         Toast.makeText(MainActivity.this, "Updating Battery", Toast.LENGTH_LONG).show();
     }
@@ -331,6 +339,8 @@ public class MainActivity extends Activity implements ServiceConnection {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 
 
         // Bind the service when the activity is created
@@ -366,10 +376,11 @@ public class MainActivity extends Activity implements ServiceConnection {
             ConBut.setBackgroundColor(Color.parseColor("#009688"));
             ConBut.setText("Disconnect");
 
-
+            megcon.setEnabled(true);
             btng.setEnabled(true);
             // show updated battery status
             updateBattery();
+
 
             /// if logging, check which sensor and settext
             prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
@@ -413,6 +424,16 @@ public class MainActivity extends Activity implements ServiceConnection {
 
         // Choose sensor radio buttons group
         btnr = (RadioGroup) findViewById(R.id.radio);
+
+        // Configure Magnetometer button clicked
+        megcon = (Button) findViewById(R.id.conmag);
+        megcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showInputDialog();
+            }
+
+    });
 
 
         // start sensor button
@@ -640,8 +661,10 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
             btng.setEnabled(true);
+            megcon.setEnabled(true);
             // show updated battery status
             updateBattery();
+
 
             /// if logging, check which sensor and settext
             prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
