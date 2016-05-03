@@ -40,6 +40,8 @@ int main(int argc, char**argv)
             fprintf(fp, mesg);
             fclose(fp);
 
+            // send text to mobile
+		system("sendEmail -f "myname@gmail.com" -t "myname@gmail.com" -u "Alert" -m "Door Movement detected!" -s "smtp.gmail.com":587 -o tls=yes -xu "meagain" -xp "mypassword"");
         }
 }
 

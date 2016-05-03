@@ -28,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -99,6 +100,7 @@ public class MainActivity extends Activity implements ServiceConnection {
     Button btng;
     // confiugre magn button
     Button megcon;
+    CheckBox checkBox;
     RadioGroup btnr;
     // battery level text
     TextView batT;
@@ -347,6 +349,9 @@ public class MainActivity extends Activity implements ServiceConnection {
         getApplicationContext().bindService(new Intent(this, MetaWearBleService.class),
                 this, Context.BIND_AUTO_CREATE);
 
+
+        //check box
+        checkBox = (CheckBox) findViewById(R.id.checkbox);
         // battery icon
         batI = (ImageView) findViewById(R.id.imageView);
         // battery level text
@@ -491,13 +496,21 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                     message += (String.format(result.toString(), Locale.US, "%d"));
 
                                                     String curTime = android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()).toString();
-                                                    new Thread(new Client()).start();
+
+                                                     //send log to webserver
                                                     SendToServer sendTask = new SendToServer();
                                                     sendTask.execute("Door Opening", curTime);
 
+                                                    // if alret box is checked, send to Raspi
+                                                    if(checkBox.isChecked()){
+                                                        new Thread(new Client()).start();
+                                                    }
 
 
-                                                   // SendToServer.SendTask(message);
+
+
+
+                                                    // SendToServer.SendTask(message);
                                                 }
 
                                                 @Override
@@ -518,7 +531,9 @@ public class MainActivity extends Activity implements ServiceConnection {
                                             //set messsage
                                             message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
                                             // and start a thread to send the message to server
-                                            new Thread(new Client()).start();
+                                            if(checkBox.isChecked()){
+                                                new Thread(new Client()).start();
+                                            }
                                             opening = false;
                                             closing = true;
                                         }
@@ -591,7 +606,9 @@ public class MainActivity extends Activity implements ServiceConnection {
 
                                                 /* Append battery level to the message */
                                                             message += (String.format(result.toString(), Locale.US, "%d"));
-                                                            new Thread(new Client()).start();
+                                                            if(checkBox.isChecked()){
+                                                                new Thread(new Client()).start();
+                                                            }
                                                         }
 
                                                         @Override
@@ -612,7 +629,9 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                     //set message
                                                     message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
                                                     // and start a thread to send the message to server
-                                                    new Thread(new Client()).start();
+                                                    if(checkBox.isChecked()){
+                                                        new Thread(new Client()).start();
+                                                    }
                                                     opening = false;
                                                     closing = true;
                                                 }
