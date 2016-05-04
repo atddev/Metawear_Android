@@ -86,7 +86,8 @@ public class MainActivity extends Activity implements ServiceConnection {
     Bmm150Magnetometer magModule;
     Switch switchModule;
     Led ledModule;
-    boolean opening, closing;
+    boolean opening, closing, alert;
+
 
     int openv, closev;
     /* server ip in local network */
@@ -100,7 +101,7 @@ public class MainActivity extends Activity implements ServiceConnection {
     Button btng;
     // confiugre magn button
     Button megcon;
-    CheckBox checkBox;
+    CheckBox checkalert;
     RadioGroup btnr;
     // battery level text
     TextView batT;
@@ -351,7 +352,9 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
         //check box
-        checkBox = (CheckBox) findViewById(R.id.checkbox);
+      //   final CheckBox checkalert = (CheckBox) findViewById(R.id.checkbox);
+        checkalert = (CheckBox) MainActivity.this.findViewById(R.id.checkBox);
+        checkalert.setChecked(false);
         // battery icon
         batI = (ImageView) findViewById(R.id.imageView);
         // battery level text
@@ -372,6 +375,7 @@ public class MainActivity extends Activity implements ServiceConnection {
         // set opening and closing to false
         opening = false;
         closing = false;
+
 
         prefs = this.getSharedPreferences("SenseApp", Context.MODE_PRIVATE);
 
@@ -447,6 +451,8 @@ public class MainActivity extends Activity implements ServiceConnection {
             @Override
             public void onClick(View v) {
 
+                alert = checkalert.isChecked();
+
                 Log.i("MainActivity", "start sampling sensor");
                 // if gyro is selected
                 if (btnr.getCheckedRadioButtonId() == R.id.radio_gyro) {
@@ -478,12 +484,12 @@ public class MainActivity extends Activity implements ServiceConnection {
                                     if (spinData.x() < -2) {
                                         if (!opening) {
                                             Log.i("test", spinData.toString());
-                                            Log.i("test", "Door Opening ");
+                                            Log.i("test", "Door Opened ");
 
 
 
                                         /* Set the message */
-                                            message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+                                            message = "Door Opened   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
 
 
                                             mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
@@ -495,14 +501,15 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                 /* Append battery level to the message */
                                                     message += (String.format(result.toString(), Locale.US, "%d"));
 
-                                                    String curTime = android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()).toString();
-
-                                                     //send log to webserver
+                                                    String curTime = android.text.format.DateFormat.format("hh:mm:ss aa", new java.util.Date()).toString();
+                                                    String curDate = android.text.format.DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString();
+                                                    
+                                                    //send log to webserver
                                                     SendToServer sendTask = new SendToServer();
-                                                    sendTask.execute("Door Opening", curTime);
+                                                    sendTask.execute("Door Opened", curTime, curDate);
 
                                                     // if alret box is checked, send to Raspi
-                                                    if(checkBox.isChecked()){
+                                                   if(alert){
                                                         new Thread(new Client()).start();
                                                     }
 
@@ -527,14 +534,25 @@ public class MainActivity extends Activity implements ServiceConnection {
                                     if (spinData.x() > 2) {
                                         if (!closing) {
                                             Log.i("test", spinData.toString());
-                                            Log.i("test", "Door closing ");
+                                            Log.i("test", "Door Closed ");
                                             //set messsage
-                                            message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+
+
+
+                                            String curTime = android.text.format.DateFormat.format("hh:mm:ss aa", new java.util.Date()).toString();
+                                            String curDate = android.text.format.DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString();
+
+                                            //send log to webserver
+                                            SendToServer sendTask = new SendToServer();
+                                            sendTask.execute("Door Closed", curTime, curDate);
+
+
+                                            message = "Door Closed  " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
                                             // and start a thread to send the message to server
-                                            if(checkBox.isChecked()){
+                                           if(alert){
                                                 new Thread(new Client()).start();
                                             }
-                                            opening = false;
+                                            opening   = false;
                                             closing = true;
                                         }
                                     }
@@ -590,12 +608,12 @@ public class MainActivity extends Activity implements ServiceConnection {
                                             if (bField.z() > openv) {
                                                 if (!opening) {
                                                     Log.i("test", bField.toString());
-                                                    Log.i("test", "Door Opening ");
+                                                    Log.i("test", "Door Opened ");
 
 
 
                                                        /* Set the message */
-                                                    message = "Door Opening   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+                                                    message = "Door Opened   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
 
 
                                                     mwBoard.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
@@ -606,7 +624,17 @@ public class MainActivity extends Activity implements ServiceConnection {
 
                                                 /* Append battery level to the message */
                                                             message += (String.format(result.toString(), Locale.US, "%d"));
-                                                            if(checkBox.isChecked()){
+
+
+                                                            String curTime = android.text.format.DateFormat.format("hh:mm:ss aa", new java.util.Date()).toString();
+                                                            String curDate = android.text.format.DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString();
+
+                                                            //send log to webserver
+                                                            SendToServer sendTask = new SendToServer();
+                                                            sendTask.execute("Door Opened", curTime, curDate);
+
+
+                                                           if(alert){
                                                                 new Thread(new Client()).start();
                                                             }
                                                         }
@@ -625,11 +653,20 @@ public class MainActivity extends Activity implements ServiceConnection {
                                             } else if (bField.z() < closev) {
                                                 if (!closing) {
                                                     Log.i("test", bField.z().toString());
-                                                    Log.i("test", "Door closing ");
+                                                    Log.i("test", "Door Closed ");
                                                     //set message
-                                                    message = "Door Closeing   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+                                                    message = "Door Closed   " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
+
+
+                                                    String curTime = android.text.format.DateFormat.format("hh:mm:ss aa", new java.util.Date()).toString();
+                                                    String curDate = android.text.format.DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString();
+
+                                                    //send log to webserver
+                                                    SendToServer sendTask = new SendToServer();
+                                                    sendTask.execute("Door Closed", curTime, curDate);
+
                                                     // and start a thread to send the message to server
-                                                    if(checkBox.isChecked()){
+                                                   if(alert){
                                                         new Thread(new Client()).start();
                                                     }
                                                     opening = false;

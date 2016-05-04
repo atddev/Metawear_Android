@@ -66,8 +66,8 @@ public class LoginActivity extends Activity {
 
 
         //skip to activity
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        startActivity(intent);
+    //    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+     //   startActivity(intent);
         //
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);

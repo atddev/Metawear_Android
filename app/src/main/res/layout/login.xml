@@ -28,7 +28,7 @@
             <AutoCompleteTextView android:id="@+id/password" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:hint="Password"
                 android:imeActionId="@+id/login"
-                android:imeActionLabel="Password"
+                android:imeActionLabel="Login"
                 android:inputType="textPassword"
                 android:gravity="right"
                 android:maxLines="1" android:singleLine="true" />

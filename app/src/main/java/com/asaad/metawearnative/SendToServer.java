@@ -47,6 +47,8 @@ public class SendToServer extends AsyncTask<String, Void, Void> {
 
            String Event = params[0];
             String Stime  = params[1];
+            String Sdate  = params[2];
+
 
             //Get csrf cookie
             //   DefaultHttpClient httpclient = new DefaultHttpClient();
@@ -67,7 +69,7 @@ public class SendToServer extends AsyncTask<String, Void, Void> {
             nameValuePairs.add(new BasicNameValuePair("csrfmiddlewaretoken", httpclient.getCookieStore().getCookies().get(0).getValue()));
             nameValuePairs.add(new BasicNameValuePair("event", Event));
             nameValuePairs.add(new BasicNameValuePair("stime", Stime));
-
+            nameValuePairs.add(new BasicNameValuePair("sdate", Sdate));
             try {
                 post.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             } catch (UnsupportedEncodingException e) {
