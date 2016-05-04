@@ -25,9 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-/**
- * Created by student on 5/1/16.
- */
 public class SendToServer extends AsyncTask<String, Void, Void> {
 
   //  static DefaultHttpClient httpclient = new DefaultHttpClient();

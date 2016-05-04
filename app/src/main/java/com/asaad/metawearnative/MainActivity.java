@@ -2,10 +2,7 @@ package com.asaad.metawearnative;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.app.usage.UsageEvents;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -18,63 +15,36 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.support.annotation.DrawableRes;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
-import com.mbientlab.metawear.module.Bmm150Magnetometer;
-import com.mbientlab.metawear.module.Bmm150Magnetometer.PowerPreset;
 import com.mbientlab.metawear.AsyncOperation;
-import com.mbientlab.metawear.DataSignal;
 import com.mbientlab.metawear.Message;
 import com.mbientlab.metawear.MetaWearBleService;
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.RouteManager;
 import com.mbientlab.metawear.UnsupportedModuleException;
 import com.mbientlab.metawear.data.CartesianFloat;
-import com.mbientlab.metawear.module.Accelerometer;
-import com.mbientlab.metawear.module.Bmi160Accelerometer;
 import com.mbientlab.metawear.module.Bmi160Gyro;
 import com.mbientlab.metawear.module.Bmm150Magnetometer;
-import com.mbientlab.metawear.module.DataProcessor;
-import com.mbientlab.metawear.module.Led;
-import com.mbientlab.metawear.module.Logging;
-import com.mbientlab.metawear.module.Macro;
-import com.mbientlab.metawear.module.Switch;
-import com.mbientlab.metawear.processor.Accumulator;
-import com.mbientlab.metawear.processor.Average;
-import com.mbientlab.metawear.processor.Comparison;
-import com.mbientlab.metawear.module.Bmi160Accelerometer.*;
-import com.mbientlab.metawear.processor.Maths;
-import com.mbientlab.metawear.processor.Rss;
-import com.mbientlab.metawear.processor.Threshold;
-
-import static com.mbientlab.metawear.MetaWearBoard.ConnectionStateHandler;
 
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class MainActivity extends Activity implements ServiceConnection {
@@ -84,8 +54,6 @@ public class MainActivity extends Activity implements ServiceConnection {
     private MetaWearBoard mwBoard;
     Bmi160Gyro gyroModule;
     Bmm150Magnetometer magModule;
-    Switch switchModule;
-    Led ledModule;
     boolean opening, closing, alert;
 
 
@@ -110,7 +78,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
     SharedPreferences prefs;
 
-
+    // method to show the magnetoemeter config. dialog
     public void showInputDialog() {
 
         // get prompts.xml view
@@ -226,7 +194,6 @@ public class MainActivity extends Activity implements ServiceConnection {
                 btng.setEnabled(false);
 
 
-
             }
 
             @Override
@@ -329,7 +296,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                 }
             });
 
-        } // end if conncete
+        } // end if connect
 
     }
 
@@ -342,8 +309,7 @@ public class MainActivity extends Activity implements ServiceConnection {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 
         // Bind the service when the activity is created
@@ -352,7 +318,7 @@ public class MainActivity extends Activity implements ServiceConnection {
 
 
         //check box
-      //   final CheckBox checkalert = (CheckBox) findViewById(R.id.checkbox);
+        //   final CheckBox checkalert = (CheckBox) findViewById(R.id.checkbox);
         checkalert = (CheckBox) MainActivity.this.findViewById(R.id.checkBox);
         checkalert.setChecked(false);
         // battery icon
@@ -442,7 +408,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                 showInputDialog();
             }
 
-    });
+        });
 
 
         // start sensor button
@@ -503,18 +469,15 @@ public class MainActivity extends Activity implements ServiceConnection {
 
                                                     String curTime = android.text.format.DateFormat.format("hh:mm:ss aa", new java.util.Date()).toString();
                                                     String curDate = android.text.format.DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString();
-                                                    
+
                                                     //send log to webserver
                                                     SendToServer sendTask = new SendToServer();
                                                     sendTask.execute("Door Opened", curTime, curDate);
 
                                                     // if alret box is checked, send to Raspi
-                                                   if(alert){
+                                                    if (alert) {
                                                         new Thread(new Client()).start();
                                                     }
-
-
-
 
 
                                                     // SendToServer.SendTask(message);
@@ -538,7 +501,6 @@ public class MainActivity extends Activity implements ServiceConnection {
                                             //set messsage
 
 
-
                                             String curTime = android.text.format.DateFormat.format("hh:mm:ss aa", new java.util.Date()).toString();
                                             String curDate = android.text.format.DateFormat.format("yyyy-MM-dd", new java.util.Date()).toString();
 
@@ -549,10 +511,10 @@ public class MainActivity extends Activity implements ServiceConnection {
 
                                             message = "Door Closed  " + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()) + "\n";
                                             // and start a thread to send the message to server
-                                           if(alert){
+                                            if (alert) {
                                                 new Thread(new Client()).start();
                                             }
-                                            opening   = false;
+                                            opening = false;
                                             closing = true;
                                         }
                                     }
@@ -634,7 +596,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                             sendTask.execute("Door Opened", curTime, curDate);
 
 
-                                                           if(alert){
+                                                            if (alert) {
                                                                 new Thread(new Client()).start();
                                                             }
                                                         }
@@ -666,7 +628,7 @@ public class MainActivity extends Activity implements ServiceConnection {
                                                     sendTask.execute("Door Closed", curTime, curDate);
 
                                                     // and start a thread to send the message to server
-                                                   if(alert){
+                                                    if (alert) {
                                                         new Thread(new Client()).start();
                                                     }
                                                     opening = false;
