@@ -6,9 +6,9 @@ It also contains a small udp client and server that is used for the alarm functi
 
 ## Usage Instructions:
 
-1- Moify the hard-coded server addresses in the [SendToServer class](https://github.com/atddev/Metawear_Android/blob/master/app/src/main/java/com/asaad/metawearnative/SendToServer.java) and [the udp client class]()
+1- Moify the hard-coded server addresses in the [SendToServer class](https://github.com/atddev/Metawear_Android/blob/master/app/src/main/java/com/asaad/metawearnative/SendToServer.java#L63) and address used for [the udp client class](https://github.com/atddev/Metawear_Android/blob/master/app/src/main/java/com/asaad/metawearnative/MainActivity.java#L62)
 
-2- Modify the hard-coded metawear MAC adddress in [the MainActivity](https://github.com/atddev/Metawear_Android/blob/master/app/src/main/java/com/asaad/metawearnative/MainActivity.java#L83) 
+2- Modify the hard-coded metawear MAC adddress in [the MainActivity](https://github.com/atddev/Metawear_Android/blob/master/app/src/main/java/com/asaad/metawearnative/MainActivity.java#L53) 
 
 3- Locate the udp server code in [/app/src/main/res/udpServer.c](https://github.com/atddev/Metawear_Android/blob/master/app/src/main/res/udpServer.c#L44) and modify line 44
 
