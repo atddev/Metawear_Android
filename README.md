@@ -17,7 +17,7 @@ It also contains a small udp client and server that is used for the alarm functi
 
 - Locate the udp server code in [/app/src/main/res/udpServer.c](https://github.com/atddev/Metawear_Android/blob/master/app/src/main/res/udpServer.c)
 
-- This is a basic udp server in C. it can be used to store the logs in a text file instead of the webapp (ex. for testing). It is also used in this app for the alert functionality, to send email alert using [sendmail](http://www.sendmail.org).
+- This is a basic udp server in C. it can be used to store the logs in a text file instead of the webapp (ex. for testing). It is also used in this app for the alert functionality, to send email alert using [sendmail](http://caspian.dotconf.net/menu/Software/SendEmail/).
 
 - If you plan in enabling the alert functionality and using the udp server, you have to [install sendmail](http://www.sendmail.org/~ca/email/doc8.12/op.html), and test the utility in the command line to make sure it is working.
 
